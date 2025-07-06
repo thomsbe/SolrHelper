@@ -1,0 +1,56 @@
+# Definiert die Dienste (Container), die Teil unserer Anwendung sind.
+services:
+  # Definiert unseren Solr-Dienst.
+  solr:
+    # Verwendet das offizielle Docker-Image für Solr in der Version 5.5.5.
+    # Diese Version entspricht der in der Produktionsumgebung.
+    image: solr:5.5.5
+    # Mapped den Port 8983 des Containers auf den Port 8983 unseres Host-Systems.
+    # So können wir über http://localhost:8983 auf Solr zugreifen.
+    ports:
+      - "8983:8983"
+    # Definiert Volumes für persistente Daten und benutzerdefinierte Konfiguration
+    volumes:
+      - solr_data:/opt/solr/server/solr  # Persistente Speicherung der Solr-Daten
+      - ./solr/configsets/testing/conf:/opt/solr/example/solr/testing/conf  # Unser benutzerdefiniertes Schema
+      - ./solr/solr.xml:/opt/solr/server/solr/solr.xml  # Solr Konfiguration für Standalone-Modus
+    user: "0:0"  # Führe den Container als root aus, um Berechtigungsprobleme zu vermeiden
+    # Führt einen Befehl aus, wenn der Container startet.
+    # Dieser Befehl startet Solr im Standalone-Modus und erstellt den Core.
+    command: 
+      - bash
+      - -c
+      - |
+        # Erstelle das Core-Verzeichnis und kopiere die Konfiguration
+        mkdir -p /opt/solr/server/solr/testing/conf
+        cp -r /opt/solr/example/solr/testing/conf/* /opt/solr/server/solr/testing/conf/
+        
+        # Erstelle die core.properties Datei
+        echo "name=testing" > /opt/solr/server/solr/testing/core.properties
+        
+        # Starte Solr im Standalone-Modus (ohne -c für Cloud-Modus)
+        /opt/solr/bin/solr start -f
+        
+        # Warte, bis Solr vollständig gestartet ist
+        sleep 10
+        
+        # Erstelle den Core, falls er noch nicht existiert
+        if [ ! -f /opt/solr/server/solr/testing/core.properties ]; then
+          echo "Erstelle neuen Core 'testing'..."
+          /opt/solr/bin/solr create_core -c testing -d /opt/solr/server/solr/testing
+          echo "Core 'testing' wurde erstellt."
+        else
+          echo "Core 'testing' existiert bereits, überspringe die Erstellung."
+        fi
+        
+        # Zeige die Core-Liste an
+        echo "Verfügbare Cores:"
+        /opt/solr/bin/solr status
+        
+        # Halte den Container am Laufen
+        tail -f /dev/null
+
+# Definiert die benannten Volumes, die von unseren Diensten verwendet werden.
+volumes:
+  # Definiert das Volume 'solr_data'. Docker verwaltet den Speicherort dieses Volumes.
+  solr_data:

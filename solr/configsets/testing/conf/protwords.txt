@@ -1,0 +1,7 @@
+# Wörter, die bei der Textanalyse nicht verändert werden sollen
+# Jedes Wort in eine eigene Zeile
+
+# Beispiel:
+# C++
+# .NET
+# SQL

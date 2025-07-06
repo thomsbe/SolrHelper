@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=42"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "solr-helper"
+version = "0.1.0"
+description = "Ein Helfer-Tool für die Interaktion mit Solr."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "requests>=2.32.4",
+    "click>=8.2.1",
+    "flask>=3.1.1",
+    "loguru>=0.7.3",
+    "pysolr>=3.10.0",
+]
+
+[project.scripts]
+solr-helper = "solr_helper.main:cli"

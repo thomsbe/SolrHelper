@@ -1,0 +1,2 @@
+# Leere Stopwort-Liste für Testzwecke
+# Hier können Stoppwörter hinzugefügt werden, die bei der Textanalyse ignoriert werden sollen

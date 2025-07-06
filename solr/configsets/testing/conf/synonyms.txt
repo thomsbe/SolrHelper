@@ -1,0 +1,7 @@
+# Synonyme für bessere Suchergebnisse
+# Format: Begriff, Synonym1, Synonym2, ...
+
+# Beispiel-Synonyme
+computer, pc, desktop, laptop, rechner
+auto, pkw, fahrzeug, wagen
+handy, smartphone, mobiltelefon, telefon

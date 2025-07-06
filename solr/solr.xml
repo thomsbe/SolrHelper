@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Solr 5.5.5 Standalone Konfiguration
+  Diese Datei wird für den Standalone-Betrieb benötigt.
+-->
+<solr>
+  <!-- Konfiguration für Solr im Standalone-Modus -->
+  <solrcloud>
+    <!-- Deaktiviere SolrCloud-Modus -->
+    <str name="host">${host:}</str>
+    <int name="hostPort">${jetty.port:8983}</int>
+    <str name="hostContext">${hostContext:solr}</str>
+    <bool name="genericCoreNodeNames">${genericCoreNodeNames:true}</bool>
+    <int name="zkClientTimeout">${zkClientTimeout:30000}</int>
+    <int name="distribUpdateSoTimeout">${distribUpdateSoTimeout:600000}</int>
+    <int name="distribUpdateConnTimeout">${distribUpdateConnTimeout:60000}</int>
+  </solrcloud>
+
+  <!-- Konfiguration für die Admin-Weboberfläche -->
+  <admin>
+    <defaultQuery>solr</defaultQuery>
+  </admin>
+</solr>
