@@ -13,6 +13,52 @@ Es handelt sich um eine kleine Webanwendung, die lokal gestartet werden kann.
 - Interaktives Bearbeiten einzelner Dokumentenfelder direkt im Browser.
 - Automatische Erkennung der Solr-Server-Fähigkeiten für sichere Updates (Atomic Updates vs. Full Re-Index).
 
+## Installation
+
+Die empfohlene Methode zur Installation und Ausführung des `solr-helper` ist die Verwendung von `uv`, einem extrem schnellen Python-Paketmanager.
+
+### 1. uv installieren
+
+Falls du `uv` noch nicht installiert hast, kannst du dies mit einem der folgenden Befehle tun:
+
+**Linux und macOS:**
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+**Windows:**
+```powershell
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+Weitere Installationsmethoden findest du in der [offiziellen `uv` Dokumentation](https://github.com/astral-sh/uv#installation).
+
+### 2. solr-helper ausführen
+
+Es gibt zwei empfohlene Wege, den `solr-helper` zu nutzen:
+
+**Option A: Direkte Ausführung mit `uvx` (Empfohlen)**
+
+`uvx` ist ein Werkzeug, das `npx` aus der Node.js-Welt ähnelt. Es lädt das Paket in eine temporäre, isolierte Umgebung herunter, führt es aus und räumt danach wieder auf. So bleibt dein System sauber.
+
+```bash
+uvx solr-helper start-web --solr-url http://dein-solr:8983 --core dein-core
+```
+
+**Option B: Permanente Installation**
+
+Wenn du das Tool systemweit oder in einer bestimmten virtuellen Umgebung installieren möchtest:
+
+```bash
+uv pip install solr-helper
+```
+
+Danach kannst du es direkt aufrufen:
+
+```bash
+solr-helper start-web --solr-url http://dein-solr:8983 --core dein-core
+```
+
 ## Benutzung der Web-Oberfläche
 
 Um die Web-Anwendung zu starten, führe folgenden Befehl aus:
