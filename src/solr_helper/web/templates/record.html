@@ -1,90 +1,100 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" data-theme="valentine">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Record Details</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <title>Record Details - {{ doc.get(unique_key_field, '-') }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-    <style>
-        body { font-family: sans-serif; margin: 2em; background-color: #fdfdfd; }
-        .container { max-width: 900px; margin: 0 auto; }
-        table { border-collapse: collapse; width: 100%; margin-bottom: 1em; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; }
-        th { background-color: #f2f2f2; }
-        thead th {
-            position: -webkit-sticky; /* Für Safari */
-            position: sticky;
-            top: 0;
-            z-index: 1;
-        }
-        .no-value { color: #999; font-style: italic; }
-        .sub-table { width: 100%; margin: 0; border: none; }
-        .sub-table th, .sub-table td { border: 1px solid #eee; padding: 4px; }
-        .sub-table th { background-color: #fafafa; }
-        #json-container { margin-top: 1em; }
-        pre { background-color: #282c34; padding: 1em; border-radius: 5px; }
-        .controls { margin-bottom: 1em; }
-        tbody tr:nth-child(even) { background-color: #f9f9f9; }
-
-        /* HTMX Modal Styles */
-        .modal {
-            display: none; /* Hidden by default */
-            position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%;
-            overflow: auto; background-color: rgba(0,0,0,0.4);
-        }
-        .modal-content {
-            background-color: #fefefe; margin: 10% auto; padding: 20px; border: 1px solid #888;
-            width: 60%; border-radius: 5px;
-        }
-        /* Zeigt das Modal an, wenn es Inhalt hat */
-        .modal:not(:empty) {
-            display: block;
-        }
-        .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
-        textarea { width: 95%; min-height: 150px; }
-        .edit-btn { cursor: pointer; color: blue; text-decoration: underline; background: none; border: none; padding: 0; font-size: inherit; }
-    </style>
 </head>
-<body>
-    <div class="container">
-        <h1>Details für Record: {{ doc.get(unique_key_field, '-') }}</h1>
-        <div class="controls">
-            <button id="toggle-json">Rohes JSON anzeigen/verbergen</button>
+<body class="bg-base-200">
+
+    <div class="navbar bg-base-100 shadow-md sticky top-0 z-50">
+        <div class="flex-1">
+            <a href="/" class="btn btn-ghost text-xl">SolrHelper</a>
+        </div>
+        <div class="flex-none">
+            <a href="/" class="btn btn-outline">Neue Suche</a>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 pt-8">
+        <div class="card bg-base-100 shadow-xl mb-8">
+            <div class="card-body">
+                <h1 class="card-title">Details für Record: <span class="badge badge-primary">{{ doc.get(unique_key_field, '-') }}</span></h1>
+                <div class="card-actions justify-end">
+                    <button id="toggle-json" class="btn btn-ghost">Rohes JSON umschalten</button>
+                </div>
+            </div>
         </div>
 
-        <div id="json-container" style="display: none;">
-            <h2>Rohes JSON</h2>
-            <pre><code class="json">{{ doc | tojson(indent=4) }}</code></pre>
+        <div id="json-container" style="display: none;" class="mb-8">
+            <div class="mockup-code">
+                <pre><code class="json">{{ doc | tojson(indent=4) }}</code></pre>
+            </div>
         </div>
 
         {% if error %}
-            <p style="color: red;">{{ error }}</p>
+            <div role="alert" class="alert alert-error mb-8">
+                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <span>Fehler: {{ error }}</span>
+            </div>
         {% else %}
-            <table>
-                <thead>
-                    <tr>
-                        <th>Feldname</th>
-                        <th>Datentyp</th>
-                        <th>Multivalued</th>
-                        <th>Stored</th>
-                        <th>Wert</th>
-                        <th>Aktion</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for field in schema_fields %}
-                        {% include '_record_row.html' %}
-                    {% endfor %}
-                </tbody>
-            </table>
+            <div class="overflow-x-auto bg-base-100 rounded-box shadow-xl mb-8" style="max-height: 70vh;">
+                <table class="table table-zebra table-pin-rows">
+                    <thead>
+                        <tr>
+                            <th>Feldname</th>
+                            <th>Datentyp</th>
+                            <th>Multivalued</th>
+                            <th>Stored</th>
+                            <th>Wert</th>
+                            <th>Aktion</th>
+                        </tr>
+                    </thead>
+                    <tbody id="record-table-body">
+                        {% for field in schema_fields %}
+                            {% include '_record_row.html' %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         {% endif %}
-        <a href="/">Neue Suche</a>
+
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h3 class="card-title">Neues Feld hinzufügen</h3>
+                <p>Fügen Sie dem Dokument ein neues Feld hinzu. Dies ist besonders nützlich für dynamische Felder.</p>
+                <form action="{{ url_for('add_field', doc_id=doc[unique_key_field]) }}" method="post" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                    <div class="form-control">
+                        <label class="label" for="new_field_name"><span class="label-text">Feldname</span></label>
+                        <input type="text" id="new_field_name" name="new_field_name" placeholder="z.B. kommentar_str" required class="input input-bordered w-full">
+                    </div>
+                    <div class="form-control">
+                        <label class="label" for="new_field_value"><span class="label-text">Wert</span></label>
+                        <input type="text" id="new_field_value" name="new_field_value" placeholder="Wert des Feldes" required class="input input-bordered w-full">
+                    </div>
+                    <div class="form-control">
+                        <button type="submit" class="btn btn-primary w-full">Hinzufügen</button>
+                    </div>
+                </form>
+                {% if schema.dynamic_fields %}
+                    <div class="divider">Verfügbare dynamische Feldmuster</div>
+                    <div class="flex flex-wrap gap-2">
+                        {% for df in schema.dynamic_fields %}
+                            <div class="badge badge-outline">{{ df.name }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
     </div>
 
     <!-- HTMX Modal Container -->
-    <div id="modal-container" class="modal"></div>
+    <div id="modal-container"></div>
 
     <script>
         // Script for JSON viewer
@@ -95,6 +105,26 @@
                 hljs.highlightAll();
             } else {
                 container.style.display = 'none';
+            }
+        });
+
+        // HTMX Modal Logic
+        document.body.addEventListener('htmx:afterSwap', function(evt) {
+            var modal = document.getElementById('modal-container');
+            if (evt.detail.target.id === 'modal-container' && evt.detail.xhr.status === 200) {
+                modal.classList.add('modal', 'modal-open');
+            }
+        });
+
+        function closeModal() {
+            var modal = document.getElementById('modal-container');
+            modal.innerHTML = '';
+            modal.classList.remove('modal', 'modal-open');
+        }
+
+        document.body.addEventListener('htmx:after-request', function(event) {
+            if (event.detail.target.closest('.modal-content')) {
+                closeModal();
             }
         });
     </script>

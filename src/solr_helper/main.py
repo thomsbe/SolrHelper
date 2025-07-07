@@ -7,7 +7,6 @@ from loguru import logger  # Für einfaches und effektives Logging
 # Importiert unseren neuen SolrClient und die zentrale Konfigurationsfunktion
 from .solr_client import SolrClient
 from .web.app import create_app
-import os
 from .config import load_solr_config
 
 import functools
@@ -75,22 +74,16 @@ def test_connection(solr_url, core):
 @pass_solr_config
 def start_web(solr_url, core, host, port):
     """Startet den Flask-Webserver für die UI."""
-    schema_cache_file = 'schema_cache.json'
-    
-    # Prüfen, ob der Schema-Cache existiert. Wenn nicht, erstellen.
-    if not os.path.exists(schema_cache_file):
-        logger.info(f"'{schema_cache_file}' nicht gefunden. Rufe Schema von Solr ab...")
-        try:
-            client = SolrClient(solr_url=solr_url, core=core)
-            schema = client.get_schema()
-            with open(schema_cache_file, 'w', encoding='utf-8') as f:
-                json.dump(schema, f, indent=2, ensure_ascii=False)
-            logger.success(f"Schema erfolgreich in '{schema_cache_file}' gespeichert.")
-        except Exception as e:
-            logger.error(f"Konnte Schema nicht abrufen und speichern: {e}")
-            raise click.ClickException("Der Webserver konnte nicht gestartet werden, da das Schema nicht abrufbar war.")
+    try:
+        logger.info("Rufe aktuelles Schema vom Solr-Server ab...")
+        client = SolrClient(solr_url=solr_url, core=core)
+        schema = client.get_schema()
+        logger.success("Schema erfolgreich vom Solr-Server abgerufen.")
+    except Exception as e:
+        logger.error(f"Konnte Schema nicht abrufen: {e}")
+        raise click.ClickException("Der Webserver konnte nicht gestartet werden, da das Schema nicht abrufbar war.")
 
-    app = create_app(solr_url=solr_url, core=core)
+    app = create_app(solr_url=solr_url, core=core, schema=schema)
     logger.info(f"Starte Webserver auf http://{host}:{port}")
     app.run(host=host, port=port, debug=True)
 
@@ -103,12 +96,6 @@ def show_schema(solr_url, core, format):
     try:
         client = SolrClient(solr_url=solr_url, core=core)
         schema = client.get_schema()
-        
-        # Zwischenspeichern der Schema-Infos als JSON-Datei
-        schema_cache_file = 'schema_cache.json'
-        with open(schema_cache_file, 'w') as f:
-            json.dump(schema, f, indent=2)
-        
         if format == 'json':
             print(json.dumps(schema, indent=2, ensure_ascii=False))
         else:
@@ -133,12 +120,6 @@ def show_schema(solr_url, core, format):
     except Exception as e:
         logger.error(f"Fehler beim Abrufen des Schemas: {e}")
         raise click.ClickException("Konnte das Schema nicht abrufen. Bitte überprüfen Sie die Verbindungseinstellungen.")
-
-    @functools.wraps(f)
-    def new_func(ctx, *args, **kwargs):
-        solr_url, core = load_solr_config(ctx.obj.get('solr_url'), ctx.obj.get('core'))
-        return f(solr_url, core, *args, **kwargs)
-    return new_func
 
 if __name__ == '__main__':
     cli()
