@@ -8,3 +8,7 @@ wheels/
 
 # Virtual environments
 .venv
+
+# SolrHelper
+schema_cache.json
+config.toml
