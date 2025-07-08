@@ -1,0 +1,79 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "SolrHelper Debug",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "src.solr_helper.main",
+            "args": [
+                "--solr-url", "http://sdvdmgtestsolr01.slub-dresden.de:8984",
+                "--core", "ahn-release",
+                "start-web",
+                "--debug",
+                "--host", "127.0.0.1",
+                "--port", "5000"
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src"
+            },
+            "justMyCode": false,
+            "stopOnEntry": false
+        },
+        {
+            "name": "SolrHelper Debug (Local Solr)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "src.solr_helper.main",
+            "args": [
+                "--solr-url", "http://localhost:8983",
+                "--core", "testing",
+                "start-web"
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src"
+            },
+            "justMyCode": false,
+            "stopOnEntry": false
+        },
+        {
+            "name": "SolrHelper Test Connection",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "src.solr_helper.main",
+            "args": [
+                "--solr-url", "http://sdvdmgtestsolr01.slub-dresden.de:8984",
+                "--core", "ahn-release",
+                "test-connection"
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src"
+            },
+            "justMyCode": false
+        },
+        {
+            "name": "SolrHelper Show Schema",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "src.solr_helper.main",
+            "args": [
+                "--solr-url", "http://sdvdmgtestsolr01.slub-dresden.de:8984",
+                "--core", "ahn-release",
+                "show-schema",
+                "--format", "table"
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src"
+            },
+            "justMyCode": false
+        }
+    ]
+}

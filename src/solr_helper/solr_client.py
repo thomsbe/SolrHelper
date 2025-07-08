@@ -1,7 +1,7 @@
 # Importiert die notwendigen Bibliotheken
 import pysolr  # Python-Bibliothek für die Interaktion mit Solr
 from loguru import logger  # Für das Logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 import requests  # Für direkte HTTP-Anfragen an die Solr-API
 
 
@@ -82,6 +82,44 @@ class SolrClient:
             logger.error(f"Unbekannter Fehler beim Verarbeiten des Schemas: {e}")
             raise
 
+    def get_indexed_fields(self, schema: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """
+        Extrahiert alle indizierten Felder aus dem Schema.
+
+        Args:
+            schema (Dict[str, Any]): Das Schema-Dictionary vom get_schema() Aufruf.
+
+        Returns:
+            List[Dict[str, Any]]: Liste der indizierten Felder mit Name und Typ.
+        """
+        indexed_fields = []
+
+        # Statische Felder durchgehen
+        for field in schema.get('fields', []):
+            # Prüfe ob das Feld indiziert ist (indexed=true oder nicht explizit auf false gesetzt)
+            if field.get('indexed', True):  # Default ist True wenn nicht angegeben
+                indexed_fields.append({
+                    'name': field['name'],
+                    'type': field.get('type', 'unknown'),
+                    'multiValued': field.get('multiValued', False)
+                })
+
+        # Dynamische Felder durchgehen
+        for field in schema.get('dynamic_fields', []):
+            if field.get('indexed', True):
+                indexed_fields.append({
+                    'name': field['name'],
+                    'type': field.get('type', 'unknown'),
+                    'multiValued': field.get('multiValued', False),
+                    'dynamic': True
+                })
+
+        # Nach Name sortieren
+        indexed_fields.sort(key=lambda x: x['name'])
+
+        logger.debug(f"Gefunden {len(indexed_fields)} indizierte Felder")
+        return indexed_fields
+
     def get_document_by_id(self, unique_key_field: str, doc_id: str) -> Optional[Dict[str, Any]]:
         """
         Ruft ein einzelnes Dokument anhand seiner ID (Unique Key) aus Solr ab.
@@ -101,6 +139,68 @@ class SolrClient:
             return None
         except Exception as e:
             logger.error(f"Fehler beim Abrufen des Dokuments mit ID {doc_id}: {e}")
+            raise
+
+
+
+    def search_documents(self, query: str, field: str = None, rows: int = 10, start: int = 0) -> Dict[str, Any]:
+        """
+        Führt eine Textsuche aus - entweder allgemein oder in einem spezifischen Feld.
+
+        Args:
+            query (str): Der Suchbegriff für die Textsuche.
+            field (str, optional): Spezifisches Feld für die Suche. Wenn None, wird in allen Feldern gesucht.
+            rows (int): Anzahl der zurückzugebenden Ergebnisse (Standard: 10).
+            start (int): Startposition für Paginierung (Standard: 0).
+
+        Returns:
+            Dict[str, Any]: Dictionary mit 'docs' (Liste der Dokumente), 'numFound' (Gesamtanzahl) und 'start' (Startposition).
+        """
+        try:
+            # Query aufbauen
+            if not query.strip():
+                search_query = "*:*"
+            elif field and field.strip():
+                # Feldspezifische Substring-Suche
+                # Escape special characters in query for Solr
+                escaped_query = query.replace('"', '\\"').replace('*', '\\*').replace('?', '\\?')
+                # Verwende Wildcards für Substring-Suche: *Begriff*
+                search_query = f'{field}:*{escaped_query}*'
+            else:
+                # Kein Feld angegeben - das sollte durch die UI verhindert werden
+                logger.warning("Textsuche ohne Feldangabe - das sollte nicht passieren!")
+                raise ValueError("Für Textsuche muss ein Feld angegeben werden")
+
+            logger.info(f"Führe Suche aus: '{search_query}' (rows={rows}, start={start})")
+
+            # Highlighting-Parameter für Solr
+            highlighting_params = {
+                'hl': 'true',                    # Highlighting aktivieren
+                'hl.fl': '*',                    # Alle Felder highlighten
+                'hl.simple.pre': '<mark class="bg-yellow-200 px-1 rounded">',  # HTML-Tag für Hervorhebung (Start)
+                'hl.simple.post': '</mark>',     # HTML-Tag für Hervorhebung (Ende)
+                'hl.fragsize': 150,              # Snippet-Länge
+                'hl.snippets': 3,                # Max. Anzahl Snippets pro Feld
+                'hl.maxAnalyzedChars': 1000000,  # Max. Zeichen für Analyse
+                'hl.requireFieldMatch': 'false'  # Highlighting auch in anderen Feldern
+            }
+
+            # Wenn spezifisches Feld angegeben, nur dieses highlighten
+            if field and field.strip():
+                highlighting_params['hl.fl'] = field
+
+            results = self.solr.search(q=search_query, rows=rows, start=start, **highlighting_params)
+
+            return {
+                'docs': results.docs,
+                'numFound': results.hits,
+                'start': start,
+                'rows': rows,
+                'query': search_query,
+                'highlighting': getattr(results, 'highlighting', {})
+            }
+        except Exception as e:
+            logger.error(f"Fehler bei der Suche mit Query '{query}' in Feld '{field}': {e}")
             raise
 
     def check_update_log_status(self) -> bool:
@@ -164,4 +264,18 @@ class SolrClient:
             logger.success(f"Feld '{field_name}' für Dokument '{doc_id}' erfolgreich aktualisiert.")
         except Exception as e:
             logger.error(f"Fehler beim Aktualisieren des Feldes '{field_name}' für Dokument '{doc_id}': {e}")
+            raise
+
+    def update_document(self, doc: Dict[str, Any]):
+        """
+        Aktualisiert ein komplettes Dokument in Solr.
+
+        Args:
+            doc (Dict[str, Any]): Das zu aktualisierende Dokument
+        """
+        try:
+            self.solr.add([doc], commit=True)
+            logger.info(f"Dokument erfolgreich aktualisiert")
+        except Exception as e:
+            logger.error(f"Fehler beim Aktualisieren des Dokuments: {e}")
             raise

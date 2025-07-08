@@ -1,6 +1,5 @@
-<div class="modal-box">
-    <h3 class="font-bold text-lg">Feld bearbeiten: {{ field.name }}</h3>
-    <button onclick="closeModal()" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+<h3 class="font-bold text-lg">Feld bearbeiten: {{ field.name }}</h3>
+<button onclick="closeModal()" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
 
     {% if warning %}
     <div role="alert" class="alert alert-warning mt-4">
@@ -39,4 +38,3 @@
             <button type="submit" class="btn btn-primary">Speichern</button>
         </div>
     </form>
-</div>

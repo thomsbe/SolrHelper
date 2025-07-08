@@ -46,7 +46,7 @@
         {% if field.get('stored') %}
         <button class="btn btn-primary btn-sm btn-square"
                 title="Feld bearbeiten"
-                hx-get="{{ url_for('edit_form', doc_id=doc.get(unique_key_field), field_name=field.name) }}"
+                hx-get="{{ url_for('record.edit_form', doc_id=doc.get(unique_key_field), field_name=field.name) }}"
                 hx-target="#modal-content"
                 hx-swap="innerHTML"
                 onclick="document.getElementById('edit-modal').showModal()">
